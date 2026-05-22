@@ -54,7 +54,7 @@ Make sure you have the following installed:
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/yourusername/shopkart.git
+git clone https://github.com/shabnam7213/Shopkart.git
 
 # 2. Navigate into the project directory
 cd shopkart
@@ -98,18 +98,6 @@ Or connect your GitHub repository directly at [vercel.com](https://vercel.com) f
 
 ---
 
-## 📸 Screenshots
-
-> Homepage with hero banner and category sections
-
-> Product listing page with filters
-
-> Shopping cart and dummy checkout flow
-
-*(Add your screenshots here)*
-
----
-
 ## 🤝 Contributing
 
 Contributions are welcome! Feel free to open an issue or submit a pull request.
@@ -131,7 +119,7 @@ This project is licensed under the **MIT License** — free to use, modify and d
 
 <div align="center">
 
-Made with ❤️ by **[Your Name](https://github.com/yourusername)**
+Made with ❤️ by Shabnam singh
 
 ⭐ Star this repo if you found it helpful!
 
