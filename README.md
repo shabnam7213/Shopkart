@@ -3,7 +3,7 @@
 
 ### A Full E-Commerce Website built with React.js
 
-🔗 **Live Site** → [https://shopkart.vercel.app](https://shopkart.vercel.app)  
+🔗 **Live Site** → ([https://shopkart.vercel.app](https://shopkart-five-flax.vercel.app))  
 
 ---
 
