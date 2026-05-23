@@ -6,11 +6,10 @@ import {
   setSearch, setCartOpen, logout,
 } from "../Slice/ProductSlice";
 import { toast } from "react-toastify";
-import { AiOutlineHeart, AiOutlineSearch, AiOutlineUser } from "react-icons/ai";
+import { AiOutlineHeart, AiOutlineSearch, AiOutlineUser, AiOutlineClose } from "react-icons/ai";
 import { BsCart3 } from "react-icons/bs";
 import { HiOutlineMenuAlt3 } from "react-icons/hi";
 
-// Top category bar — keeps emojis as user wants
 const CATEGORIES = [
   { name: "Woman's Fashion", icon: "👗" },
   { name: "Men's Fashion",   icon: "👔" },
@@ -23,16 +22,25 @@ const CATEGORIES = [
   { name: "Health & Beauty", icon: "💄" },
 ];
 
+const NAV_LINKS = [
+  { label: "Home",    path: "/" },
+  { label: "Contact", path: "/contact" },
+  { label: "About",   path: "/about" },
+  { label: "Sign Up", path: "/signup" },
+];
+
 function Navber() {
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
-  const cartCount = useSelector(selectCartCount);
-  const user = useSelector(selectUser);
-  const wishlist = useSelector(selectWishlist);
-  const [searchVal, setSearchVal] = useState("");
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const dispatch    = useDispatch();
+  const navigate    = useNavigate();
+  const cartCount   = useSelector(selectCartCount);
+  const user        = useSelector(selectUser);
+  const wishlist    = useSelector(selectWishlist);
+
+  const [searchVal,      setSearchVal]      = useState("");
+  const [userMenuOpen,   setUserMenuOpen]   = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
+  const [searchOpen,     setSearchOpen]     = useState(false);
+  const [scrolled,       setScrolled]       = useState(false);
   const searchRef = useRef();
 
   useEffect(() => {
@@ -41,7 +49,7 @@ function Navber() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Close user menu on outside click
+  // close user menu on outside click
   useEffect(() => {
     const handler = (e) => {
       if (!e.target.closest(".user-menu-wrap")) setUserMenuOpen(false);
@@ -50,50 +58,63 @@ function Navber() {
     return () => document.removeEventListener("click", handler);
   }, []);
 
+  // close mobile menu on route change / resize
+  useEffect(() => {
+    const onResize = () => { if (window.innerWidth > 768) setMobileMenuOpen(false); };
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  // lock body scroll when mobile menu is open
+  useEffect(() => {
+    document.body.style.overflow = mobileMenuOpen ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [mobileMenuOpen]);
+
   const handleSearch = (e) => {
     e.preventDefault();
     if (!searchVal.trim()) return;
     dispatch(setSearch(searchVal));
     navigate(`/shop?q=${encodeURIComponent(searchVal)}`);
     setSearchVal("");
+    setSearchOpen(false);
+    setMobileMenuOpen(false);
   };
 
   const handleLogout = () => {
     dispatch(logout());
     setUserMenuOpen(false);
+    setMobileMenuOpen(false);
     toast.info("Logged out successfully");
     navigate("/");
   };
 
   return (
     <>
-      <nav
-        style={{
-          position: "sticky", top: 0, zIndex: 1000,
-          background: "#fff",
-          boxShadow: scrolled ? "0 2px 12px rgba(0,0,0,0.12)" : "0 1px 0 #e0e0e0",
-          transition: "box-shadow 0.3s",
-        }}
-      >
-        <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 20px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 24, height: 60 }}>
+      {/* ── MAIN NAV ── */}
+      <nav style={{
+        position: "sticky", top: 0, zIndex: 1000,
+        background: "#fff",
+        boxShadow: scrolled ? "0 2px 12px rgba(0,0,0,0.12)" : "0 1px 0 #e0e0e0",
+        transition: "box-shadow 0.3s",
+      }}>
+        <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 16px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 16, height: 60 }}>
+
             {/* LOGO */}
             <Link to="/" style={{ textDecoration: "none", flexShrink: 0 }}>
-              <span style={{ fontSize: 24, fontWeight: 800, color: "#212121", letterSpacing: -0.5 }}>Exclusive</span>
+              <span style={{ fontSize: 22, fontWeight: 800, color: "#212121", letterSpacing: -0.5 }}>
+                Exclusive
+              </span>
             </Link>
 
-            {/* NAV LINKS — desktop */}
-            <div style={{ display: "flex", gap: 28, alignItems: "center" }} className="hidden-mobile">
-              {[
-                { label: "Home", path: "/" },
-                { label: "Contact", path: "/contact" },
-                { label: "About", path: "/about" },
-                { label: "Sign Up", path: "/signup" },
-              ].map((item) => (
+            {/* NAV LINKS — desktop only */}
+            <div className="nav-links-desktop">
+              {NAV_LINKS.map((item) => (
                 <Link
                   key={item.path}
                   to={item.path}
-                  style={{ fontSize: 14, fontWeight: 500, color: "#212121", textDecoration: "none", transition: "color 0.2s", whiteSpace: "nowrap" }}
+                  style={{ fontSize: 14, fontWeight: 500, color: "#212121", textDecoration: "none", whiteSpace: "nowrap", transition: "color 0.2s" }}
                   onMouseEnter={(e) => (e.target.style.color = "#db3022")}
                   onMouseLeave={(e) => (e.target.style.color = "#212121")}
                 >
@@ -102,8 +123,12 @@ function Navber() {
               ))}
             </div>
 
-            {/* SEARCH */}
-            <form onSubmit={handleSearch} style={{ flex: 1, maxWidth: 420, display: "flex", alignItems: "center", background: "#f5f5f5", borderRadius: 4, overflow: "hidden", border: "1px solid #e0e0e0" }}>
+            {/* SEARCH — desktop */}
+            <form
+              onSubmit={handleSearch}
+              className="search-desktop"
+              style={{ flex: 1, maxWidth: 420, display: "flex", alignItems: "center", background: "#f5f5f5", borderRadius: 4, overflow: "hidden", border: "1px solid #e0e0e0" }}
+            >
               <input
                 ref={searchRef}
                 value={searchVal}
@@ -116,11 +141,24 @@ function Navber() {
               </button>
             </form>
 
-            {/* RIGHT ACTIONS */}
-            <div style={{ display: "flex", alignItems: "center", gap: 18, flexShrink: 0 }}>
+            {/* RIGHT ICONS */}
+            <div style={{ display: "flex", alignItems: "center", gap: 14, flexShrink: 0, marginLeft: "auto" }}>
 
-              {/* WISHLIST — icon */}
-              <Link to="/wishlist" style={{ position: "relative", textDecoration: "none", color: "#212121", display: "flex", alignItems: "center" }} title="Wishlist">
+              {/* Search icon — mobile only */}
+              <button
+                className="search-icon-mobile"
+                onClick={() => setSearchOpen(!searchOpen)}
+                style={{ background: "none", border: "none", cursor: "pointer", color: "#212121", display: "none", alignItems: "center" }}
+              >
+                <AiOutlineSearch size={22} />
+              </button>
+
+              {/* WISHLIST */}
+              <Link
+                to="/wishlist"
+                style={{ position: "relative", textDecoration: "none", color: "#212121", display: "flex", alignItems: "center" }}
+                title="Wishlist"
+              >
                 <AiOutlineHeart size={24} />
                 {wishlist.length > 0 && (
                   <span style={{ position: "absolute", top: -6, right: -6, background: "#db3022", color: "#fff", fontSize: 9, fontWeight: 700, minWidth: 16, height: 16, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", padding: "0 3px" }}>
@@ -129,7 +167,7 @@ function Navber() {
                 )}
               </Link>
 
-              {/* CART — icon */}
+              {/* CART */}
               <button
                 onClick={() => dispatch(setCartOpen(true))}
                 style={{ position: "relative", background: "none", border: "none", cursor: "pointer", color: "#212121", display: "flex", alignItems: "center" }}
@@ -143,13 +181,13 @@ function Navber() {
                 )}
               </button>
 
-              {/* USER — icon */}
+              {/* USER */}
               <div className="user-menu-wrap" style={{ position: "relative" }}>
                 {user ? (
                   <>
                     <button
                       onClick={() => setUserMenuOpen(!userMenuOpen)}
-                      style={{ background: "#db3022", color: "#fff", border: "none", borderRadius: "50%", width: 36, height: 36, fontWeight: 700, fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+                      style={{ background: "#db3022", color: "#fff", border: "none", borderRadius: "50%", width: 34, height: 34, fontWeight: 700, fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
                     >
                       {user.name?.[0]?.toUpperCase() || "U"}
                     </button>
@@ -157,19 +195,18 @@ function Navber() {
                       <div style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, background: "#fff", borderRadius: 8, boxShadow: "0 8px 24px rgba(0,0,0,0.15)", minWidth: 200, zIndex: 500, overflow: "hidden", border: "1px solid #f0f0f0" }}>
                         {[
                           { label: "My Profile", path: "/account" },
-                          { label: "Wishlist", path: "/wishlist" },
-                          { label: "Shop Now", path: "/shop" },
+                          { label: "Wishlist",   path: "/wishlist" },
+                          { label: "Shop Now",   path: "/shop" },
                         ].map((item) => (
                           <Link
                             key={item.path}
                             to={item.path}
                             onClick={() => setUserMenuOpen(false)}
-                            style={{ display: "flex", alignItems: "center", gap: 8, padding: "11px 18px", fontSize: 13, color: "#212121", textDecoration: "none", transition: "background 0.2s" }}
+                            style={{ display: "flex", alignItems: "center", gap: 8, padding: "11px 18px", fontSize: 13, color: "#212121", textDecoration: "none" }}
                             onMouseEnter={(e) => (e.currentTarget.style.background = "#f5f5f5")}
                             onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
                           >
-                            <AiOutlineUser size={15} />
-                            {item.label}
+                            <AiOutlineUser size={15} /> {item.label}
                           </Link>
                         ))}
                         <button
@@ -184,36 +221,58 @@ function Navber() {
                     )}
                   </>
                 ) : (
-                  <Link to="/login" style={{ background: "#db3022", color: "#fff", padding: "8px 20px", borderRadius: 4, fontSize: 13, fontWeight: 600, textDecoration: "none", whiteSpace: "nowrap" }}>
+                  <Link
+                    to="/login"
+                    style={{ background: "#db3022", color: "#fff", padding: "8px 16px", borderRadius: 4, fontSize: 13, fontWeight: 600, textDecoration: "none", whiteSpace: "nowrap" }}
+                  >
                     Login
                   </Link>
                 )}
               </div>
 
-              {/* MOBILE MENU */}
+              {/* HAMBURGER — mobile only */}
               <button
+                className="hamburger"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                style={{ background: "none", border: "none", cursor: "pointer", display: "none", color: "#212121" }}
-                className="show-mobile"
+                style={{ background: "none", border: "none", cursor: "pointer", color: "#212121", display: "none", alignItems: "center" }}
               >
-                <HiOutlineMenuAlt3 size={24} />
+                {mobileMenuOpen ? <AiOutlineClose size={24} /> : <HiOutlineMenuAlt3 size={24} />}
               </button>
             </div>
           </div>
         </div>
 
-        {/* CATEGORY BAR — keeps emojis as user wants, not changed */}
+        {/* SEARCH BAR — mobile dropdown */}
+        {searchOpen && (
+          <div className="search-mobile-bar" style={{ padding: "10px 16px", borderTop: "1px solid #f0f0f0", background: "#fff" }}>
+            <form onSubmit={handleSearch} style={{ display: "flex", alignItems: "center", background: "#f5f5f5", borderRadius: 4, border: "1px solid #e0e0e0", overflow: "hidden" }}>
+              <input
+                autoFocus
+                value={searchVal}
+                onChange={(e) => setSearchVal(e.target.value)}
+                placeholder="What are you looking for?"
+                style={{ flex: 1, padding: "10px 14px", border: "none", background: "transparent", fontSize: 13, outline: "none", fontFamily: "Poppins" }}
+              />
+              <button type="submit" style={{ background: "none", border: "none", padding: "0 14px", cursor: "pointer", color: "#878787", display: "flex", alignItems: "center" }}>
+                <AiOutlineSearch size={20} />
+              </button>
+            </form>
+          </div>
+        )}
+
+        {/* CATEGORY BAR */}
         <div style={{ borderTop: "1px solid #f0f0f0", background: "#fff", overflowX: "auto" }}>
-          <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 20px", display: "flex", gap: 0 }}>
+          <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 16px", display: "flex", gap: 0 }}>
             {CATEGORIES.map((cat) => (
               <Link
                 key={cat.name}
                 to={`/category/${encodeURIComponent(cat.name)}`}
-                style={{ display: "flex", alignItems: "center", gap: 5, padding: "8px 14px", fontSize: 12, fontWeight: 500, color: "#212121", textDecoration: "none", whiteSpace: "nowrap", borderBottom: "3px solid transparent", transition: "all 0.2s", flexShrink: 0 }}
+                onClick={() => setMobileMenuOpen(false)}
+                style={{ display: "flex", alignItems: "center", gap: 5, padding: "8px 12px", fontSize: 12, fontWeight: 500, color: "#212121", textDecoration: "none", whiteSpace: "nowrap", borderBottom: "3px solid transparent", transition: "all 0.2s", flexShrink: 0 }}
                 onMouseEnter={(e) => { e.currentTarget.style.borderBottomColor = "#db3022"; e.currentTarget.style.color = "#db3022"; }}
                 onMouseLeave={(e) => { e.currentTarget.style.borderBottomColor = "transparent"; e.currentTarget.style.color = "#212121"; }}
               >
-                <span style={{ fontSize: 16 }}>{cat.icon}</span>
+                <span style={{ fontSize: 15 }}>{cat.icon}</span>
                 {cat.name}
               </Link>
             ))}
@@ -221,10 +280,97 @@ function Navber() {
         </div>
       </nav>
 
+      {/* ── MOBILE MENU OVERLAY ── */}
+      {mobileMenuOpen && (
+        <div
+          style={{ position: "fixed", inset: 0, zIndex: 999, display: "flex" }}
+          onClick={(e) => { if (e.target === e.currentTarget) setMobileMenuOpen(false); }}
+        >
+          {/* Backdrop */}
+          <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.4)" }} onClick={() => setMobileMenuOpen(false)} />
+
+          {/* Drawer */}
+          <div style={{
+            position: "relative", marginLeft: "auto", width: 280, height: "100%",
+            background: "#fff", zIndex: 1000, overflowY: "auto",
+            display: "flex", flexDirection: "column",
+            animation: "slideIn 0.25s ease",
+          }}>
+            {/* Drawer header */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 20px", borderBottom: "1px solid #f0f0f0" }}>
+              <span style={{ fontSize: 18, fontWeight: 800, color: "#212121" }}>Exclusive</span>
+              <button onClick={() => setMobileMenuOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "#212121" }}>
+                <AiOutlineClose size={22} />
+              </button>
+            </div>
+
+            {/* Nav links */}
+            <div style={{ padding: "12px 0" }}>
+              {NAV_LINKS.map((item) => (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  onClick={() => setMobileMenuOpen(false)}
+                  style={{ display: "block", padding: "13px 20px", fontSize: 15, fontWeight: 500, color: "#212121", textDecoration: "none", borderBottom: "1px solid #f9f9f9" }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = "#f5f5f5"; e.currentTarget.style.color = "#db3022"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#212121"; }}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+
+            {/* Categories in drawer */}
+            <div style={{ padding: "8px 0", borderTop: "1px solid #f0f0f0" }}>
+              <p style={{ margin: "8px 20px", fontSize: 11, fontWeight: 600, color: "#aaa", textTransform: "uppercase", letterSpacing: 1 }}>Categories</p>
+              {CATEGORIES.map((cat) => (
+                <Link
+                  key={cat.name}
+                  to={`/category/${encodeURIComponent(cat.name)}`}
+                  onClick={() => setMobileMenuOpen(false)}
+                  style={{ display: "flex", alignItems: "center", gap: 10, padding: "11px 20px", fontSize: 14, color: "#212121", textDecoration: "none", borderBottom: "1px solid #f9f9f9" }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = "#f5f5f5"; e.currentTarget.style.color = "#db3022"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#212121"; }}
+                >
+                  <span style={{ fontSize: 18 }}>{cat.icon}</span>
+                  {cat.name}
+                </Link>
+              ))}
+            </div>
+
+            {/* Login / Logout at bottom */}
+            <div style={{ padding: "16px 20px", marginTop: "auto", borderTop: "1px solid #f0f0f0" }}>
+              {user ? (
+                <button
+                  onClick={handleLogout}
+                  style={{ width: "100%", padding: "12px", background: "#db3022", color: "#fff", border: "none", borderRadius: 6, fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "Poppins" }}
+                >
+                  Logout
+                </button>
+              ) : (
+                <Link
+                  to="/login"
+                  onClick={() => setMobileMenuOpen(false)}
+                  style={{ display: "block", textAlign: "center", padding: "12px", background: "#db3022", color: "#fff", borderRadius: 6, fontSize: 14, fontWeight: 600, textDecoration: "none" }}
+                >
+                  Login
+                </Link>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       <style>{`
+        @keyframes slideIn {
+          from { transform: translateX(100%); }
+          to   { transform: translateX(0); }
+        }
         @media (max-width: 768px) {
-          .hidden-mobile { display: none !important; }
-          .show-mobile { display: flex !important; }
+          .nav-links-desktop { display: none !important; }
+          .search-desktop    { display: none !important; }
+          .search-icon-mobile { display: flex !important; }
+          .hamburger          { display: flex !important; }
         }
       `}</style>
     </>

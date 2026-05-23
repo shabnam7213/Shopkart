@@ -23,13 +23,19 @@ function Timer({ targetHours = 23 }) {
   }, []);
 
   const Block = ({ val, label }) => (
-    <div style={{ textAlign: "center" }}>
-      <div style={{ background: "#212121", color: "#fff", width: 48, height: 48, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 800, margin: "0 auto 4px" }}>
-        {String(val).padStart(2, "0")}
-      </div>
-      <div style={{ fontSize: 11, color: "#878787", fontWeight: 600 }}>{label}</div>
+  <div style={{ textAlign: "center" }}>
+    <div style={{
+      fontSize: 28,
+      fontWeight: 800,
+      color: "#212121",
+      lineHeight: 1,
+      marginBottom: 4,
+    }}>
+      {String(val).padStart(2, "0")}
     </div>
-  );
+    <div style={{ fontSize: 11, color: "#878787", fontWeight: 600 }}>{label}</div>
+  </div>
+);
 
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
